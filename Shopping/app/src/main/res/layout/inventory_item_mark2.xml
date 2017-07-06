@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/t"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/bt_orderMore"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:text="+"
+        android:layout_alignBaseline="@+id/tv_orderCount"
+        android:layout_alignBottom="@+id/tv_orderCount"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:id="@+id/tv_orderCount"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@+id/bt_orderMore"
+        android:text="0"
+        android:textAlignment="center"
+        android:textSize="30dp"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/bt_orderFewer"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:text="-"
+        android:layout_alignBaseline="@+id/tv_orderCount"
+        android:layout_alignBottom="@+id/tv_orderCount"
+        android:layout_toStartOf="@+id/tv_orderCount" />
+
+    <TextView
+        android:id="@+id/tv_item"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@+id/bt_orderFewer"
+        android:text="TextView"
+        android:textSize="15sp" />
+</RelativeLayout>

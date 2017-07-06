@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/tv_welcome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="89dp"
+        android:text="Welcome to Dillin Lab Quartzy App"
+        android:textAlignment="center"
+        android:textSize="24sp" />
+
+    <Button
+        android:id="@+id/bt_goShoppingList"
+        android:layout_width="200dp "
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_welcome"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="55dp"
+        android:text="Shopping List" />
+
+    <Button
+        android:id="@+id/bt_goFindItem"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/bt_goShoppingList"
+        android:layout_centerHorizontal="true"
+        android:text="Find Item" />
+
+    <Button
+        android:id="@+id/bt_goMyFavs"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/bt_goFindItem"
+        android:layout_below="@+id/bt_goFindItem"
+        android:text="My Favorites" />
+
+    <Button
+        android:id="@+id/bt_goLogin"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/bt_goMyFavs"
+        android:layout_centerHorizontal="true"
+        android:text="Change Login" />
+</RelativeLayout>

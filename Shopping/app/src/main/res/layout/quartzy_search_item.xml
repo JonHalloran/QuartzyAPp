@@ -1,0 +1,60 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/t"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/bt_SearchOrder"
+        android:layout_width="100dp"
+        android:layout_height="45dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:text="ORDER" />
+
+    <Button
+        android:id="@+id/bt_searchAddFav"
+        android:layout_width="wrap_content"
+        android:layout_height="45dp"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@+id/bt_SearchOrder"
+        android:text="Favorite"
+        android:layout_toEndOf="@+id/relativeLayout" />
+
+    <RelativeLayout
+        android:id="@+id/relativeLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/bt_searchAddFav"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@+id/bt_SearchOrder">
+
+        <TextView
+            android:id="@+id/tv_searchResultItemPrice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/tv_searchCatalogNumber"
+            android:text="Price"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tv_searchCatalogNumber"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/tv_searchResultItemName"
+            android:text="Manufacturer"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tv_searchResultItemName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:text="ItemName"
+            android:textSize="13sp" />
+    </RelativeLayout>
+
+</RelativeLayout>
