@@ -41,6 +41,7 @@ public class SearchResults extends AppCompatActivity{
         Intent intent = getIntent();
         String jsonString = intent.getExtras().getString("jsonString");
         arrayLength = 0;
+        Log.v(LOG_TAG, "jsonString:  " + jsonString);
 
         try {
             jsonObject = new JSONObject(jsonString);
@@ -61,10 +62,6 @@ public class SearchResults extends AppCompatActivity{
 
         String[] itemIdArray = new String[arrayLength];
         Log.v(LOG_TAG, "item list: " + item_id.toString());
-
-
-
-
 
         Log.v(LOG_TAG, "Rigght beforeAdapter");
         final SearchResultsAdapter adapter = new SearchResultsAdapter(item_names, item_id, catalog_number, prices, companies, types, context);

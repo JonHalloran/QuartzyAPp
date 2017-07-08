@@ -10,6 +10,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import org.json.JSONObject;
+
 /**
  * Created by Jonathan on 7/3/2017.
  */
@@ -26,8 +28,15 @@ public class QuartzySearch extends AppCompatActivity{
         bt_quartzySearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String searchString = "search:" + et_quartzySearchString.getText().toString();
-                new QuartzyHandler(context).execute(searchString);
+
+                JSONObject searchObject = new JSONObject();
+                try {
+                    searchObject.put("request_type", "search");
+                    searchObject.put("search_string", et_quartzySearchString.getText().toString());
+                }catch (Exception e){
+                    Log.v(LOG_TAG, e.toString());
+                }
+                new QuartzyHandler(context).execute(searchObject);
             }
         });
 

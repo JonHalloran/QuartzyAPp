@@ -9,6 +9,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,7 +27,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static String DB_NAME = "info.db";
     private static String DB_PATH = "";
     private static final int DB_VERSION = 11;
-    private final String LOD_ID = "DatabaseHelper";
+    private final String LOG_TAG = "DatabaseHelper";
 
     private SQLiteDatabase mDataBase;
     private final Context mContext;
@@ -172,25 +174,36 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         int counter = 0;
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
         this.checkDataBase();
+        JSONObject[] orderObjects = {};
 
         Cursor cursor = sqLiteDatabase.query("SHOPPING_LIST", null, null, null, null, null, null);
         cursor.moveToFirst();
         while (counter < cursor.getCount()) {
             if(cursor.getInt(9)>0) {
+                JSONObject orderobject = new JSONObject();
+                try{
 
-                orderValues.add(cursor.getString(5) + ":" + cursor.getString(9) + ":" + cursor.getString(3) + ":" + cursor.getString(7) + ":" + cursor.getString(8)+ ":" + cursor.getString(10)+ ":" + cursor.getString(11));
-                Log.v(LOD_ID, "Order Output :" + cursor.getString(5) + ":" + cursor.getString(9) + ":" + cursor.getString(3) + ":" + cursor.getString(7) + ":" + cursor.getString(8) + ":" + cursor.getString(10)+ ":" + cursor.getString(11));
-            }
+                    orderobject.put  ("request_type", "order");
+                    orderobject.put ("item_name", cursor.getString(5));
+                    orderobject.put ("quantity", cursor.getInt(9));
+                    orderobject.put ("item_id", cursor.getString(3));
+                    orderobject.put ("catalog_number", cursor.getString(7));
+                    orderobject.put ("price", cursor.getString(8));
+                    orderobject.put ("company", cursor.getString(10));
+                    orderobject.put ("type", cursor.getString(11));
+
+                }catch (Exception e){
+                    Log.v(LOG_TAG, e.toString());
+                }
+                orderObjects[counter]= orderobject;
 
             counter++;
             cursor.moveToNext();
         }
         cursor.close();
-        String[] strings = orderValues.toArray(new String[orderValues.size()]);
-        Log.v(LOD_ID, strings.toString());
-        new QuartzyHandler(mContext).execute(strings);
+        new QuartzyHandler(mContext).execute(orderObjects);
         clearList();
         sqLiteDatabase.close();
     }
 
-}
+}}

@@ -36,7 +36,7 @@ import java.util.Set;
  * Created by Jonathan on 7/2/2017.
  */
 
-public class QuartzyHandler extends AsyncTask<String, Integer, String> {
+public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
     private static final String LOG_TAG = "QuartzyHandler";
     CookieManager cookieManager = new CookieManager(null,CookiePolicy.ACCEPT_ALL);
     static final String COOKIES_HEADER = "Set-Cookie";
@@ -44,28 +44,17 @@ public class QuartzyHandler extends AsyncTask<String, Integer, String> {
     private String person_id  = null;
     private String authorization = null;
     private boolean isSearch = false;
-
+    private JSONObject inputObject;
+    private String inputType;
 
 
     Context context;
-/*
-    protected Integer doInBackground(String... urlt) {
-        try {
-            URL url = new URL("http://www.quartzy.com/");
-            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-            Log.v(LOG_TAG, urlConnection.getRequestMethod());
 
-        } catch (Exception e) {
-            Log.v(LOG_TAG, e.toString());
-
-        }
-        return 7;
-    }*/
     public QuartzyHandler (Context context){
         this.context= context;
 
     }
-    protected String doInBackground(String... strings){
+    protected String doInBackground(JSONObject... jsonObjects){
         Log.v(LOG_TAG, "doInBackground running");
         CookieHandler.setDefault(cookieManager);
         cookieManager.getCookieStore().removeAll();
@@ -73,37 +62,21 @@ public class QuartzyHandler extends AsyncTask<String, Integer, String> {
         getToken();
         getPersonID();
         String resultsstring = null;
-        Log.v(LOG_TAG, "strings[0]" + strings[0]);
-        Log.v(LOG_TAG, "strings[0] shortened" + strings[0].substring(0, strings[0].indexOf(":")));
-        if (strings[0].substring(0, strings[0].indexOf(":")).equals("search") ){
-            isSearch = true;
-            Log.v(LOG_TAG, "Search works:  " + Boolean.toString(strings[0].substring(0, strings[0].indexOf(":")).equals("search")));
-            String search_String = strings[0].substring(strings[0].indexOf(":")+1);
-            resultsstring = searchQuartzy(search_String);
-        }else {
 
-            for (String string : strings) {
-                try {
-                    String item_name = string.substring(0, string.indexOf(":"));
-                    string = string.substring(string.indexOf(":") + 1);
-                    String quantity = string.substring(0, string.indexOf(":"));
-                    string = string.substring(string.indexOf(":") + 1);
-                    String item_id = string.substring(0, string.indexOf(":"));
-                    string = string.substring(string.indexOf(":") + 1);
-                    String catalog_number = string.substring(0, string.indexOf(":"));
-                    string = string.substring(string.indexOf(":") + 1);
-                    String price = string.substring(0, string.indexOf(":"));
-                    string = string.substring(string.indexOf(":") + 1);
-                    String company = string.substring(0, string.indexOf(":"));
-                    string = string.substring(string.indexOf(":") + 1);
-                    String type = string;
-                    orderItem(item_name, quantity, item_id, catalog_number, price, company, type);
-                }catch (Exception e){
-                    Log.v(LOG_TAG, "After that for statement:  "  + e.toString());
-                }
+        for(JSONObject jsonObject : jsonObjects) {
+            try {
+                inputType = jsonObject.getString("request_type");
+            } catch (Exception e) {
+                Log.v(LOG_TAG, e.toString());
+            }
+            switch (inputType) {
+                case "search":
+                    resultsstring = searchQuartzy(jsonObject);
+                    break;
+                case "order":
+                    orderItem(jsonObject);
             }
         }
-
         return resultsstring;
     }
     public String login(int len) {
@@ -339,7 +312,26 @@ public class QuartzyHandler extends AsyncTask<String, Integer, String> {
 
         }
     }
-    public void orderItem (String item_name, String quantity, String item_id, String catalog_number, String price, String company, String type){
+    public void orderItem (JSONObject orderJSONObject){
+        String item_name = null;
+        String quantity = null;
+        String item_id = null;
+        String catalog_number = null;
+        String price = null;
+        String company = null;
+        String type = null;
+        try{
+            item_name = orderJSONObject.getString("item_name");
+            quantity = orderJSONObject.getString("quantity");
+            item_id = orderJSONObject.getString("item_id");
+            catalog_number = orderJSONObject.getString("catalog_number");
+            price = orderJSONObject.getString("price");
+            company = orderJSONObject.getString("company");
+            type = orderJSONObject.getString("type");
+        }catch (Exception e){
+            Log.v(LOG_TAG, e.toString());
+        }
+
         String requestaddress = "https://io.quartzy.com/groups/46170/order-requests";
         URL requestURL = null;
         String requestp1 = "{\"data\":{\"attributes\":{\"item_name\":\"";
@@ -458,20 +450,6 @@ public class QuartzyHandler extends AsyncTask<String, Integer, String> {
         is.close();
         return sb.toString();
     }
-
-        /*
-            try {
-                ByteArrayOutputStream bo = new ByteArrayOutputStream();
-                int i = is.read();
-                while(i != -1) {
-                    bo.write(i);
-                    i = is.read();
-                }
-                return bo.toString();
-            } catch (IOException e) {
-                return "";
-            }
-        }*/
     private void jsonConverter (String string){
         Log.v(LOG_TAG, "jsonConverter Running to get access_token");
         JSONObject jsonObject = null;
@@ -484,8 +462,14 @@ public class QuartzyHandler extends AsyncTask<String, Integer, String> {
             Log.v(LOG_TAG, e.toString());
         }
     }
-    public String searchQuartzy(String searchString){
+    public String searchQuartzy(JSONObject jsonObject){
         Log.v(LOG_TAG, "Search Quartzy is Running");
+        String searchString = null;
+        try{
+            searchString = jsonObject.getString("search_string");
+        }catch (Exception e){
+            Log.v(LOG_TAG, e.toString());
+        }
         String longString = null;
         String searchStringp1 = "https://io.quartzy.com/groups/46170/items?limit=10&page=1&query=";
         String searchStringp2 = "&sort=-created_at";
@@ -537,15 +521,16 @@ public class QuartzyHandler extends AsyncTask<String, Integer, String> {
         } catch (Exception e) {
             Log.v(LOG_TAG, "2" + e.toString());
         }
-
+        Log.v(LOG_TAG, "Longstring:  " + longString.toString());
         return longString;
 
     }
 
     @Override
     protected void onPostExecute(String string) {
+        Log.v(LOG_TAG, "onPostExecute running" );
         super.onPostExecute(string);
-        if(isSearch) {
+        if(inputType == "search") {
             Intent intent = new Intent(context, SearchResults.class);
             intent.putExtra("jsonString", string);
             context.startActivity(intent);

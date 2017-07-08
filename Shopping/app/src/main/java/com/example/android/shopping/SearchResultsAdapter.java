@@ -9,6 +9,8 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 
+import org.json.JSONObject;
+
 import java.util.List;
 
 /**
@@ -61,9 +63,22 @@ public class SearchResultsAdapter extends BaseAdapter {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            String orderString = item_name.get(position) + ":1:" + item_id.get(position) +":" + catalog_number.get(position) +":" + price.get(position) + ":" + company.get(position) + ":" + type.get(position);
+                JSONObject orderobject = new JSONObject();
+                        try{
+                            orderobject.put  ("request_type", "order");
+                            orderobject.put ("item_name", item_name.get(position));
+                            orderobject.put ("quantity", "1");
+                            orderobject.put ("item_id", item_id.get(position));
+                            orderobject.put ("catalog_number", catalog_number.get(position));
+                            orderobject.put ("price", price.get(position));
+                            orderobject.put ("company", company.get(position));
+                            orderobject.put ("type", type.get(position));
 
-                new QuartzyHandler(context).execute(orderString);
+                        }catch (Exception e){
+                            Log.v(LOG_TAG, e.toString());
+                        }
+
+                new QuartzyHandler(context).execute(orderobject);
             }
         });
 
