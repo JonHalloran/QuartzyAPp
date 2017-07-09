@@ -22,7 +22,7 @@ import java.util.Map;
  */
 
 public class MainActivity extends AppCompatActivity {
-    String LOG_TAG = "MainActivity";
+    private static final String LOG_TAG = "MainActivity";
     Context context = this;
 
     @Override
@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         bt_goMyFavs.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(context, FavoritesList.class);
+                Intent intent = new Intent(context, SignIn.class);
                 startActivity(intent);
             }
         });
@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(context, QuartzySearch.class);
                 startActivity(intent);
+
             }
         });
     }
