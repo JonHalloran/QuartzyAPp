@@ -20,12 +20,12 @@ import java.util.List;
 public class SearchResultsAdapter extends BaseAdapter {
 
     private  static  final String LOG_TAG = "SearchResultsAdapter";
-    List<String> item_name;
-    List<String> item_id;
-    List<String> catalog_number;
-    List<String> price;
-    List<String> company;
-    List<String> type;
+    private List<String> item_name;
+    private List<String> item_id;
+    private List<String> catalog_number;
+    private List<String> price;
+    private List<String> company;
+    private List<String> type;
     Context context;
 
     @Override
@@ -40,8 +40,7 @@ public class SearchResultsAdapter extends BaseAdapter {
 
     @Override
     public long getItemId(int position) {
-        long l = (long) position;
-        return l;
+        return (long) position;
     }
 
     @Override
@@ -85,7 +84,7 @@ public class SearchResultsAdapter extends BaseAdapter {
         return view;
     }
 
-    public SearchResultsAdapter(List<String> item_name, List<String> item_id, List<String> catalog_number, List<String> price, List<String> company, List<String> type, Context context) {
+    private SearchResultsAdapter(List<String> item_name, List<String> item_id, List<String> catalog_number, List<String> price, List<String> company, List<String> type, Context context) {
         this.item_name = item_name;
         Log.v(LOG_TAG, "lets see waht they got" + item_name.toString());
         this.item_id = item_id;

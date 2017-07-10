@@ -35,7 +35,7 @@ import java.util.Set;
 /**
  * Created by Jonathan on 7/2/2017.
  */
-
+// TODO: 7/9/2017 confirmation of success toasts
 public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
     private static final String LOG_TAG = "QuartzyHandler";
     CookieManager cookieManager = new CookieManager(null,CookiePolicy.ACCEPT_ALL);
@@ -75,6 +75,12 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
                     break;
                 case "order":
                     orderItem(jsonObject);
+                    break;
+                case "requestssearch":
+                    resultsstring = requestsSearch(jsonObject);
+                    break;
+                case "signin":
+                    signIn(jsonObject);
             }
         }
         return resultsstring;
@@ -526,14 +532,166 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
 
     }
 
+    private String requestsSearch (JSONObject jsonObject){
+        Log.d(LOG_TAG, "requestSearchRunning");
+        String searchString = null;
+        String returnString = null;
+        try{
+            searchString = jsonObject.getString("search_string");
+        }catch (Exception e){
+            Log.v(LOG_TAG, e.toString());
+        }
+        Log.d(LOG_TAG, "searchString:  "+ searchString);
+        String requestSearchStringp1 = "https://io.quartzy.com/groups/46170/order-requests?group%5B%5D=46170&limit=1&query=";
+        String requestSearchStringp2 = "&sort=-status_changed_at&status%5B%5D=ORDERED&status%5B%5D=BACKORDERED";
+        String requestSearchString = requestSearchStringp1 + searchString + requestSearchStringp2;
+        URL searchURL = null;
+
+        try {
+            searchURL = new URL(requestSearchString);
+        } catch (MalformedURLException e) {
+            Log.v(LOG_TAG, e.toString());
+        }
+        StringBuffer data = new StringBuffer();
+        HttpURLConnection conn = null;
+        try {
+            conn = (HttpURLConnection) searchURL.openConnection();
+        } catch (IOException e) {
+            Log.v(LOG_TAG, e.toString());
+        }
+        try {
+            conn.setRequestMethod("GET");
+        } catch (Exception e) {
+            Log.v(LOG_TAG, e.toString());
+        }
+
+        conn.setRequestProperty("Accept", "application/vnd.api+json");
+        //conn.setRequestProperty("Accept-Encoding", "gzip, deflate, br");
+        conn.setRequestProperty("Accept-Language", "en-US,en;q=0.8");
+        conn.setRequestProperty("Authorization", authorization);
+        conn.setRequestProperty("Connection", "keep-alive");
+        conn.setRequestProperty("Host", "io.quartzy.com");
+        conn.setRequestProperty("Origin", "https://app.quartzy.com");
+        //conn.setRequestProperty("Referer", "https://app.quartzy.com/groups/190045/requests/new?itemIds[]=26035030");
+        conn.setRequestProperty("User-Agent", "Chrome/58.0.3029.110");
+        conn.setInstanceFollowRedirects(false);
+
+        try{
+            conn.connect();
+        }catch (Exception e){
+            Log.v(LOG_TAG, e.toString());
+        }
+
+        try {
+            InputStream in = new BufferedInputStream(conn.getInputStream());
+            String encoding = new InputStreamReader(conn.getInputStream()).getEncoding();
+            Log.v(LOG_TAG, "Encoding is:  " + encoding);
+            String string = readStream(in);
+            returnString = string;
+            Log.v(LOG_TAG, "Input:  " + returnString);
+        } catch (Exception e) {
+            Log.v(LOG_TAG, "2" + e.toString());
+        }
+        Log.v(LOG_TAG, "returnString:  " + returnString);
+        return returnString;
+
+    }
+
+    private void signIn(JSONObject jsonObject){
+        Log.d(LOG_TAG, "signIn");
+        String id = null;
+        String quantity = null;
+        String quantityreceived = null;
+        URL signInURL = null;
+        String payloadP1 = null;
+        String payloadP2 = null;
+        String payloadP3 = null;
+        String payloadP4 = null;
+        String payloadComplete = null;
+
+
+        try{
+            id = jsonObject.getString("id");
+            quantity = jsonObject.getString("quantity");
+            quantityreceived = jsonObject.getString("quantityreceived");
+        }catch (Exception e){
+            Log.v(LOG_TAG, e.toString());
+        }
+        payloadP3 ="\"}},\"order_request\":{\"data\":{\"type\":\"order_request\",\"id\":\"";
+        payloadP4 = "\"}}},\"type\":\"order_request_status_change\"}}";
+        if (quantity.equals(quantityreceived)){
+            payloadP1 = "{\"data\":{\"attributes\":{\"status\":\"RECEIVED\",\"message\":null,\"is_partial\":false},\"relationships\":{\"updated_by\":{\"data\":{\"type\":\"user\",\"id\":\"";
+            // TODO: 7/9/2017 figure out person_id
+            payloadComplete = payloadP1 + "39647" + payloadP3 +id + payloadP4;
+        }else if (!quantity.equals(quantityreceived)){
+            payloadP1= "{\"data\":{\"attributes\":{\"status\":\"RECEIVED\",\"message\":\"Received ";
+            payloadP2= "\",\"is_partial\":true},\"relationships\":{\"updated_by\":{\"data\":{\"type\":\"user\",\"id\":\"";
+            payloadComplete = payloadP1 +quantityreceived +" of "+ quantity + payloadP2 + person_id + payloadP3 +id + payloadP4;
+        }
+
+        Log.v(LOG_TAG,payloadComplete);
+
+        try {
+            signInURL = new URL("https://io.quartzy.com/order-request-status-changes");
+        } catch (MalformedURLException e) {
+            Log.v(LOG_TAG,e.toString());
+        }
+        StringBuffer data = new StringBuffer();
+        HttpURLConnection conn = null;
+        try {
+            conn = (HttpURLConnection) signInURL.openConnection();
+        } catch (IOException e) {
+            Log.v(LOG_TAG, e.toString());
+        }
+        try {
+            conn.setRequestMethod("POST");
+        } catch (Exception e) {
+            Log.v(LOG_TAG,  e.toString());
+        }
+
+        conn.setRequestProperty("Accept", "application/vnd.api+json");
+        //conn.setRequestProperty("Accept-Encoding", "gzip, deflate, br");
+        conn.setRequestProperty("Accept-Language", "en-US,en;q=0.8");
+        conn.setRequestProperty("Authorization", authorization);
+        conn.setRequestProperty("Connection", "keep-alive");
+        conn.setRequestProperty("Content-Type", "application/vnd.api+json");
+        conn.setRequestProperty("Host", "io.quartzy.com");
+        conn.setRequestProperty("Origin", "https://app.quartzy.com");
+        conn.setRequestProperty("Referer", "https://app.quartzy.com/groups/190045/requests?status[]=ORDERED");
+        conn.setRequestProperty("User-Agent", "Chrome/58.0.3029.110");
+        conn.setInstanceFollowRedirects(false);
+
+        try {
+            OutputStream os = conn.getOutputStream();
+            BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(os));
+            writer.write(payloadComplete, 0, payloadComplete.length());
+            writer.flush();
+            writer.close();
+            os.close();
+
+        } catch (Exception e) {
+            Log.v(LOG_TAG, e.toString());
+        }
+        set_cookie(conn);
+
+    }
     @Override
     protected void onPostExecute(String string) {
         Log.v(LOG_TAG, "onPostExecute running" );
+        Log.v(LOG_TAG, "string:  " + string);
         super.onPostExecute(string);
         if(inputType == "search") {
             Intent intent = new Intent(context, SearchResults.class);
             intent.putExtra("jsonString", string);
             context.startActivity(intent);
         }
+        if (inputType == "requestssearch"){
+
+            Intent intent = new Intent(context, SignIn2.class);
+            intent.putExtra("jsonString", string);
+            context.startActivity(intent);
+        }
+
     }
 }

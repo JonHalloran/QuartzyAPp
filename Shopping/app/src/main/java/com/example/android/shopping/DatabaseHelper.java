@@ -22,7 +22,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
+// TODO: 7/9/2017 merge two databases
 public class DatabaseHelper extends SQLiteOpenHelper {
+    // database helper for use with list of "commonly" ordered items in Dillin Lab
 
     private static String DB_NAME = "info.db";
     private static String DB_PATH = "";
@@ -170,6 +172,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     }
     public void orderItems(){
+        // method to order items.  Calls QuartzyHandler to do it.
         List<String> orderValues = new LinkedList<String>();
         int counter = 0;
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();

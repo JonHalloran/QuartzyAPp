@@ -23,7 +23,7 @@ public class FavoritesList extends AppCompatActivity {
 
     @Override
 
-    //// TODO: 6/17/2017  fix this shit
+    //// TODO: 6/17/2017  fix this
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         DBhelper2 dBhelper2 = DBhelper2.getInstance(context);

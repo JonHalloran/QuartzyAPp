@@ -20,7 +20,7 @@ import java.util.Map;
 /**
  * Created by Jonathan on 7/1/2017.
  */
-
+// TODO: 7/9/2017 Favorites
 public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = "MainActivity";
     Context context = this;

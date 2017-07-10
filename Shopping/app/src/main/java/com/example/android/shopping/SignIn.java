@@ -4,6 +4,7 @@ package com.example.android.shopping;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -38,6 +39,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -61,6 +65,8 @@ public class SignIn extends AppCompatActivity {
     private HandlerThread handlerThread;
     TextureView.SurfaceTextureListener textureListner;
     private File file;
+    private Context context = this;
+    float focus;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -121,7 +127,7 @@ public class SignIn extends AppCompatActivity {
         public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
             super.onCaptureCompleted(session, request, result);
             Toast.makeText(SignIn.this, "Saved:" + file, Toast.LENGTH_SHORT).show();
-            createCameraPreview();
+            //createCameraPreview();
         }
     };
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
@@ -208,6 +214,9 @@ public class SignIn extends AppCompatActivity {
             Size[] sizes = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
             int width = sizes[0].getWidth();
             int height = sizes[0].getHeight();
+            focus = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
+            float hundred = new Float(100);
+            Log.d(LOG_TAG, "minimum focus distance:  "  + Float.toString(focus));
             ImageReader imageReader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
             List<Surface> surfaces = new ArrayList<Surface>(2);
             surfaces.add(imageReader.getSurface());
@@ -221,6 +230,12 @@ public class SignIn extends AppCompatActivity {
             captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
+            if (focus >=100 ){
+                captureBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, hundred );
+            }else {
+                captureBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, focus);
+            }
+
             file = new File(Environment.getExternalStorageDirectory() + "/temp.jpg");
             final ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
                 @Override
@@ -234,6 +249,8 @@ public class SignIn extends AppCompatActivity {
                         byteBuffer.get(bytes);
                         save(bytes);
                         getCroppedImage();
+                        quartzySearch();
+                        Log.d(LOG_TAG, "post tessHandler");
                     }catch (Exception e){
                         Log.d(LOG_TAG, e.toString());
                     }finally {
@@ -250,7 +267,7 @@ public class SignIn extends AppCompatActivity {
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
                     Log.d(LOG_TAG, "capturecompleted");
                     super.onCaptureCompleted(session, request, result);
-                    createCameraPreview();
+                    //createCameraPreview();
                 }
             };
             cameraDevice.createCaptureSession(surfaces, new CameraCaptureSession.StateCallback() {
@@ -308,12 +325,13 @@ public class SignIn extends AppCompatActivity {
         Bitmap bitmap = BitmapFactory.decodeFile(file.toString());
         int bHeight = bitmap.getHeight();
         int bWidth = bitmap.getWidth();
-        Bitmap croppedBitmap = bitmap.createBitmap(bitmap, 0, 0, bWidth/2, bHeight/5);
-        iv_test.setImageBitmap(croppedBitmap);
+        Bitmap croppedBitmap = bitmap.createBitmap(bitmap, 0, 0, bWidth/2, bHeight/15);
 
         FileOutputStream out = null;
         try {
-            out = new FileOutputStream(Environment.getExternalStorageDirectory() + "/cropped.jpg");
+            String storageString = Environment.getExternalStorageDirectory() + "/cropped.jpg";
+            Log.d(LOG_TAG, storageString);
+            out = new FileOutputStream(storageString);
             croppedBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
         } catch (Exception e) {
             e.printStackTrace();
@@ -327,5 +345,32 @@ public class SignIn extends AppCompatActivity {
             }
         }
 
+    }
+    private void quartzySearch(){
+        // TODO: 7/9/2017 split to two methods
+
+        Log.d(LOG_TAG, "quartzySearch");
+        String searchString = null;
+        String oCRResults = null;
+        TessHandler tessHandler = new TessHandler(context);
+        oCRResults = tessHandler.analyzeImage();
+        Log.d(LOG_TAG, "OCR Results" + oCRResults);
+        if (oCRResults == null){
+            Toast.makeText(context, "Didn't work please try again", Toast.LENGTH_LONG).show();
+            Intent intent = new Intent(context, SignIn.class);
+            startActivity(intent);
+        }else if (oCRResults.length() > 7){
+            searchString = oCRResults.substring( 3, 7);
+        }else {
+            searchString = oCRResults;
+        }
+        JSONObject searchObject = new JSONObject();
+        try {
+            searchObject.put("request_type", "requestssearch");
+            searchObject.put("search_string", searchString);
+        }catch (Exception e){
+            Log.v(LOG_TAG, e.toString());
+        }
+        new QuartzyHandler(context).execute(searchObject);
     }
 }

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/iv_signIn2CroppedImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        app:srcCompat="@mipmap/ic_launcher" />
+
+    <TextView
+        android:id="@+id/tv_sI2ItemName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/iv_signIn2CroppedImage"
+        android:text="Item Name"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/tv_sI2Vendor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/tv_sI2ItemName"
+        android:text="Vendor"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tv_sI2CatalogNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/tv_sI2Vendor"
+        android:text="Catalog Number"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tv_sI2Price"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="$$$$$"
+        android:textSize="16sp"
+        android:layout_below="@+id/tv_sI2CatalogNumber"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:id="@+id/bt_sI2SignIn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:text="Sign In" />
+
+    <Button
+        android:id="@+id/bt_sI2GoBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignTop="@+id/bt_sI2SignIn"
+        android:text="Go Back" />
+</RelativeLayout>

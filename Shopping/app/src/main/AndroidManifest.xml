@@ -56,6 +56,17 @@
             android:label="SignIn"
             android:parentActivityName=".MainActivity" >
         </activity>
+        <activity
+            android:name=".SignIn2"
+            android:label="SignIn2"
+            android:parentActivityName=".MainActivity" >
+        </activity>
+        <activity
+            android:name=".TessHandler"
+            android:label="TessHanler"
+            android:parentActivityName=".MainActivity" >
+        </activity>
+
 
     </application>
 

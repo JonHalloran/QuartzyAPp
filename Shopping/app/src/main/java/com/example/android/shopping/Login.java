@@ -15,7 +15,7 @@ import android.widget.Toast;
 /**
  * Created by Jonathan on 7/1/2017.
  */
-
+// TODO: 7/9/2017 Quartzy call to get person id (group id too?) so that get personID isn't called every QuartzyHandler 
 public class Login extends AppCompatActivity {
     String LOG_TAG = "Login";
     Context context = this;

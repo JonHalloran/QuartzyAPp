@@ -78,10 +78,10 @@ public class ShoppingListAdapter extends BaseAdapter {
         this.itemList = itemList;
         orderAmount = new int[itemList.length];
     }
-    public String[] getItemList(){
+    private String[] getItemList(){
         return itemList;
     }
-    public int[] getOrderAmount(){
+    private int[] getOrderAmount(){
         return orderAmount;
     }
 }

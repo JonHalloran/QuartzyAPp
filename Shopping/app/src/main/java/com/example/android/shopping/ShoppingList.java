@@ -24,7 +24,7 @@ public class ShoppingList extends AppCompatActivity {
 
     @Override
 
-    //// TODO: 6/17/2017  fix this shit
+    //// TODO: 6/17/2017  fix this
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         DatabaseHelper mDBHelper = new DatabaseHelper(this);
@@ -42,7 +42,8 @@ public class ShoppingList extends AppCompatActivity {
         }
         try {
             shopping_items = mDBHelper.getFirstColumn();
-        }catch (SQLException ex){
+        }catch (SQLException e){
+            e.printStackTrace();
         }
         // layout stuff
         setContentView(R.layout.shopping_list);
@@ -95,7 +96,7 @@ public class ShoppingList extends AppCompatActivity {
         DatabaseHelper databaseHelper = new DatabaseHelper(context);
         String selItems="";
         for(String item:selectedItems){
-            if(selItems=="")
+            if(selItems.equals(""))
                 selItems=databaseHelper.getURLFromItemname(item);
             else
                 selItems+="/"+databaseHelper.getURLFromItemname(item);

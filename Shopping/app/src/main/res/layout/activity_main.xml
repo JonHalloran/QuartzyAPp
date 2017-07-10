@@ -37,7 +37,7 @@
         android:layout_height="wrap_content"
         android:layout_alignStart="@+id/bt_goFindItem"
         android:layout_below="@+id/bt_goFindItem"
-        android:text="My Favorites" />
+        android:text="Sign In Items" />
 
     <Button
         android:id="@+id/bt_goLogin"

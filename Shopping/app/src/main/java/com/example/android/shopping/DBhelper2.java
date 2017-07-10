@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Created by Jonathan on 7/1/2017.
  */
-
+// TODO: 7/9/2017 merge
 public class DBhelper2 extends SQLiteOpenHelper {
     public static final int DATABASE_VERSION = 1;
     public static final String DATABASE_NAME = "FAVORITES_DB";
