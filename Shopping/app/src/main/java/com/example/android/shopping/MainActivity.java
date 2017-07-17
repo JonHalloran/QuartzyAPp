@@ -21,17 +21,20 @@ import java.util.Map;
  * Created by Jonathan on 7/1/2017.
  */
 // TODO: 7/9/2017 Favorites
-public class MainActivity extends AppCompatActivity {
+    //general class for interacting with Quartzy
+class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = "MainActivity";
     Context context = this;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        // check if login exists
         SharedPreferences sharedPref =  getSharedPreferences("myprefs", 0);
         String login = sharedPref.getString("Login", "");
         String password = sharedPref.getString("Password", "");
         Log.v(LOG_TAG, login + password);
-        if (login == "" || password == "") {
+        //forced to login if not given
+        if (login.equals("") || password.equals("")) {
             Intent intent = new Intent(this, Login.class);
             startActivity(intent);
         }
@@ -55,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        //this button was supposed to be for favorites but as that isn't implemented yet got switched over
         Button bt_goMyFavs = (Button) findViewById(R.id.bt_goMyFavs);
         bt_goMyFavs.setOnClickListener(new View.OnClickListener() {
             @Override

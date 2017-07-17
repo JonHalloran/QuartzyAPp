@@ -14,18 +14,19 @@ import java.util.List;
  * Created by Jonathan on 7/1/2017.
  */
 // TODO: 7/9/2017 merge
-public class DBhelper2 extends SQLiteOpenHelper {
-    public static final int DATABASE_VERSION = 1;
-    public static final String DATABASE_NAME = "FAVORITES_DB";
-    public static final String TABLE_NAME = "FAVORITES_TABLE";
+class DBhelper2 extends SQLiteOpenHelper {
+    private static final int DATABASE_VERSION = 1;
+    private static final String DATABASE_NAME = "FAVORITES_DB";
+    private static final String TABLE_NAME = "FAVORITES_TABLE";
     // table columns
-    public static final String ITEM = "item";
-    public static final String URL = "URL";
+    private static final String ITEM = "item";
+    private static final String URL = "URL";
     private static final String LOG_TAG = "DBhelper2";
+    // TODO: 7/16/2017 fix static stuff
     private static DBhelper2 sInstance;
     Context context;
 
-    public DBhelper2(Context context) {
+    DBhelper2(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
         this.context = context;
     }
@@ -42,12 +43,12 @@ public class DBhelper2 extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int int1, int int2) {
         // TODO: 7/1/2017
     }
-    public static synchronized DBhelper2 getInstance (Context context){
+    synchronized static  DBhelper2 getInstance (Context context){
         if (sInstance == null){
             sInstance = new DBhelper2(context.getApplicationContext());
         }return  sInstance;
     }
-    public void addItem(String item, String itemURL){
+    void addItem(String item, String itemURL){
         getInstance(context);
         SQLiteDatabase db = sInstance.getWritableDatabase();
         db.beginTransaction();
@@ -63,10 +64,9 @@ public class DBhelper2 extends SQLiteOpenHelper {
             db.endTransaction();
         }
     }
-    public String getURLFromItemname(String itemName) {
+    String getURLFromItemname(String itemName) {
         String returnValue ;
-        String item = itemName;
-        String query = "SELECT * FROM "+ TABLE_NAME+ " WHERE " + ITEM + " = '" + item + "'";
+        String query = "SELECT * FROM "+ TABLE_NAME+ " WHERE " + ITEM + " = '" + itemName + "'";
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
         Cursor cursor = sqLiteDatabase.rawQuery(query, null);
         cursor.moveToFirst();
@@ -75,8 +75,8 @@ public class DBhelper2 extends SQLiteOpenHelper {
         cursor.close();
         return returnValue;
     }
-    public String [] getFirstColumn() {
-        List<String> returnValues = new LinkedList<String>();
+    String [] getFirstColumn() {
+        List<String> returnValues = new LinkedList<>();
         int counter = 0;
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
 

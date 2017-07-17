@@ -16,7 +16,8 @@ import org.json.JSONObject;
  * Created by Jonathan on 7/3/2017.
  */
 
-public class QuartzySearch extends AppCompatActivity{
+class QuartzySearch extends AppCompatActivity{
+    // takes in string and sends search results to quartzy handler
     Context context = this;
     String LOG_TAG = "QuartzySearch";
     @Override
@@ -33,8 +34,9 @@ public class QuartzySearch extends AppCompatActivity{
                 try {
                     searchObject.put("request_type", "search");
                     searchObject.put("search_string", et_quartzySearchString.getText().toString());
+                    searchObject.put("page", String.valueOf(1));
                 }catch (Exception e){
-                    Log.v(LOG_TAG, e.toString());
+                    e.printStackTrace();
                 }
                 new QuartzyHandler(context).execute(searchObject);
             }

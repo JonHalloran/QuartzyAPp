@@ -9,21 +9,20 @@ import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 /**
  * Created by Jonathan on 7/9/2017.
  */
 
-public class SignIn2 extends AppCompatActivity {
+class SignIn2 extends AppCompatActivity {
+    // simple activity.  Shows result from Tess string search through resultsSearch in Qhandler and
+    // allows you to sign it in.
     private static final String LOG_TAG = "SignIn2";
     TextView tv_ItemName;
     ImageView iv_signIn2CroppedImage;
@@ -85,7 +84,7 @@ public class SignIn2 extends AppCompatActivity {
         try {
             resultObject = new JSONObject(jsonString);
         } catch (Exception e) {
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
         try {
             JSONObject smallerJSONObject = resultObject.getJSONArray("data").getJSONObject(0);
@@ -99,7 +98,7 @@ public class SignIn2 extends AppCompatActivity {
             price = evenSmallerObject.getString("price");
 
         }catch (Exception e) {
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
     }
 

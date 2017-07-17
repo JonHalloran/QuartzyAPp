@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 // TODO: 7/9/2017 merge two databases
-public class DatabaseHelper extends SQLiteOpenHelper {
+class DatabaseHelper extends SQLiteOpenHelper {
     // database helper for use with list of "commonly" ordered items in Dillin Lab
 
     private static String DB_NAME = "info.db";
@@ -35,12 +35,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private final Context mContext;
     private boolean mNeedUpdate = false;
 
-    public DatabaseHelper(Context context) {
+    DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
-        if (android.os.Build.VERSION.SDK_INT >= 17)
-            DB_PATH = context.getApplicationInfo().dataDir + "/databases/";
-        else
-            DB_PATH = "/data/data/" + context.getPackageName() + "/databases/";
+        DB_PATH = context.getApplicationInfo().dataDir + "/databases/";
         this.mContext = context;
 
         copyDataBase();
@@ -48,7 +45,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         this.getReadableDatabase();
     }
 
-    public void updateDataBase() throws IOException {
+    void updateDataBase() throws IOException {
         if (mNeedUpdate) {
             File dbFile = new File(DB_PATH + DB_NAME);
             if (dbFile.exists())
@@ -113,8 +110,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             mNeedUpdate = true;
     }
 
-    public String [] getFirstColumn() {
-        List<String> returnValues = new LinkedList<String>();
+    String [] getFirstColumn() {
+        List<String> returnValues = new LinkedList<>();
         int counter = 0;
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
         this.checkDataBase();
@@ -131,10 +128,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         sqLiteDatabase.close();
         return strings;
     }
-    public String getURLFromItemname(String itemName) {
+    String getURLFromItemname(String itemName) {
         String returnValue ;
-        String item = itemName;
-        String query = "SELECT * FROM SHOPPING_LIST WHERE ITEMS = '" + item + "'";
+        String query = "SELECT * FROM SHOPPING_LIST WHERE ITEMS = '" + itemName + "'";
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
         Cursor cursor = sqLiteDatabase.rawQuery(query, null);
         cursor.moveToFirst();
@@ -143,8 +139,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return returnValue;
     }
-
-    public int getOrderAmount(String item){
+    int getOrderAmount(String item){
         SQLiteDatabase sqLiteDatabase = this.getReadableDatabase();
         int returnValue;
         String query = "SELECT * FROM SHOPPING_LIST WHERE ITEMS = '" + item + "'";
@@ -155,15 +150,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return returnValue;
     }
-    public void setOrderAmount (String item, int i){
+    void setOrderAmount (String item, int i){
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-        contentValues.put("ORDER_AMOUNT", Integer.valueOf(i));
+        contentValues.put("ORDER_AMOUNT", i);
         sqLiteDatabase.update("SHOPPING_LIST", contentValues, "ITEMS = '" + item + "'", null);
 
 
     }
-    public void clearList(){
+    void clearList(){
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put("ORDER_AMOUNT", 0);
@@ -171,9 +166,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     }
-    public void orderItems(){
+    void orderItems(){
         // method to order items.  Calls QuartzyHandler to do it.
-        List<String> orderValues = new LinkedList<String>();
         int counter = 0;
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
         this.checkDataBase();
@@ -196,7 +190,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     orderobject.put ("type", cursor.getString(11));
 
                 }catch (Exception e){
-                    Log.v(LOG_TAG, e.toString());
+                    e.printStackTrace();
                 }
                 orderObjects[counter]= orderobject;
 

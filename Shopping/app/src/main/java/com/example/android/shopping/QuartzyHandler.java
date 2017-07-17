@@ -1,10 +1,12 @@
 package com.example.android.shopping;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.json.JSONObject;
 
@@ -34,23 +36,26 @@ import java.util.Set;
 
 /**
  * Created by Jonathan on 7/2/2017.
+ * Handles all interection with Quartzy.
  */
 // TODO: 7/9/2017 confirmation of success toasts
-public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
+// TODO: 7/11/2017 fix how handling cookies, don't think I'm using cookie handler correctly
+// TODO: 7/11/2017 have class check before relogging
+class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
     private static final String LOG_TAG = "QuartzyHandler";
-    CookieManager cookieManager = new CookieManager(null,CookiePolicy.ACCEPT_ALL);
-    static final String COOKIES_HEADER = "Set-Cookie";
-    private String access_token = null;
+    private CookieManager cookieManager = new CookieManager(null,CookiePolicy.ACCEPT_ALL);
+    private static final String COOKIES_HEADER = "Set-Cookie";
     private String person_id  = null;
     private String authorization = null;
-    private boolean isSearch = false;
-    private JSONObject inputObject;
     private String inputType;
+    private String group_id = null;
+    private String quartzySearchString = null;
+    private String quartzySearchPage = null;
 
 
     Context context;
 
-    public QuartzyHandler (Context context){
+    QuartzyHandler (Context context){
         this.context= context;
 
     }
@@ -58,34 +63,43 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
         Log.v(LOG_TAG, "doInBackground running");
         CookieHandler.setDefault(cookieManager);
         cookieManager.getCookieStore().removeAll();
-        login( 10000);
+        login();
         getToken();
-        getPersonID();
-        String resultsstring = null;
+        String resultsString = null;
 
         for(JSONObject jsonObject : jsonObjects) {
+            //This is all to handle different requests types in same async task.  Probably a better way to do this but not sure what it is.
             try {
                 inputType = jsonObject.getString("request_type");
             } catch (Exception e) {
-                Log.v(LOG_TAG, e.toString());
+                e.printStackTrace();
             }
             switch (inputType) {
+                case "login":
+                    getIDs();
+                    break;
                 case "search":
-                    resultsstring = searchQuartzy(jsonObject);
+                    checkIDs();
+                    resultsString = searchQuartzy(jsonObject);
                     break;
                 case "order":
+                    checkIDs();
                     orderItem(jsonObject);
                     break;
                 case "requestssearch":
-                    resultsstring = requestsSearch(jsonObject);
+                    checkIDs();
+                    resultsString = requestsSearch(jsonObject);
                     break;
                 case "signin":
+                    checkIDs();
                     signIn(jsonObject);
+                    break;
             }
         }
-        return resultsstring;
+        return resultsString;
     }
-    public String login(int len) {
+    private void login() {
+        // using login info to get "frontend:session" which will be needed
         SharedPreferences sharedPref = context.getSharedPreferences("myprefs", 0);
         String password = sharedPref.getString("Password", null);
         String login = sharedPref.getString("Login", null);
@@ -97,19 +111,18 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
         try {
             addr = new URL("https://www.quartzy.com/auth/login");
         } catch (MalformedURLException e) {
-            Log.v(LOG_TAG, "4" + e.toString());
+            e.printStackTrace();
         }
-        StringBuffer data = new StringBuffer();
         HttpURLConnection conn = null;
         try {
             conn = (HttpURLConnection) addr.openConnection();
-        } catch (IOException e) {
-            return "Open connection error";
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         try {
             conn.setRequestMethod("POST");
         }catch (Exception e){
-            Log.v(LOG_TAG, "5" + e.toString());
+            e.printStackTrace();
         }
 
         conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
@@ -133,52 +146,22 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
         //conn.setInstanceFollowRedirects(true);
 
         try {
-            Log.v(LOG_TAG, "output beginning");
             OutputStream os = conn.getOutputStream();
-            Log.v(LOG_TAG, "2");
             BufferedWriter writer = new BufferedWriter(
                     new OutputStreamWriter(os));
-            Log.v(LOG_TAG, post_data);
             writer.write(post_data, 0, post_data.length());
-            Log.v(LOG_TAG, "4" + conn.toString());
             writer.flush();
             writer.close();
             os.close();
-            Log.v(LOG_TAG, "5" + conn.toString());
 
         }catch (Exception e){
-            Log.v(LOG_TAG, "1" + e.toString());
+            e.printStackTrace();
         }
         set_cookie(conn);
-        try {
-            InputStream in = new BufferedInputStream(conn.getInputStream());
-            String string = readStream(in);
-        } catch (Exception e){
-            Log.v(LOG_TAG, "2" + e.toString());
-        }
-        //POST data:
-        String post_str = post_data;
-        data.append(post_str);
-        try {
-            conn.connect();
-        } catch (IOException e) {
-            return "Connecting error";
-        }
-        DataOutputStream dataOS = null;
-        try {
-            dataOS = new DataOutputStream(conn.getOutputStream());
-        } catch (IOException e2) {
-            return "Out stream error";
-        }
-        try {
-            dataOS.writeBytes(data.toString());
-        } catch (IOException e) {
-            return "Out stream error 1";
-        }
-
-        return "hello";
     }
-    public void getToken() {
+    private void getToken() {
+        //kinda curious what the client id actually is
+        // this method gets the authorization using the frontend:session cookie
         String client_id = "QLAqCIFOysTc34xv6HuSazE5GmPAF6RGYZgtyRR8";
         String token_server = "https://io.quartzy.com/oauth/tokens";
 
@@ -200,19 +183,18 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
         try {
             token_server_url = new URL(token_server);
         } catch (MalformedURLException e) {
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
-        StringBuffer data = new StringBuffer();
         HttpURLConnection conn = null;
         try {
             conn = (HttpURLConnection) token_server_url.openConnection();
-        } catch (IOException e) {
-            Log.v(LOG_TAG, e.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         try {
             conn.setRequestMethod("POST");
         } catch (Exception e) {
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
 
         conn.setRequestProperty("Accept", "*/*");
@@ -240,27 +222,29 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
             os.close();
 
         } catch (Exception e) {
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
         set_cookie(conn);
         try {
             InputStream in = new BufferedInputStream(conn.getInputStream());
-            String encoding = new InputStreamReader(conn.getInputStream()).getEncoding();
             String string = readStream(in);
             jsonConverter(string);
         } catch (Exception e) {
-            Log.v(LOG_TAG, "2" + e.toString());
+            e.printStackTrace();
         }
 
 
     }
-    public void getPersonID() {
+    private void getIDs() {
+        // Gets the person_ID/user_ID from quartzy so that it shows up as the correct person doing things.11
+
+        // TODO: 7/11/2017 switch thsi method to be done after login is first put in and then not run again.  Also add getting the group ID as that shouldn't be hardcoded.
         {
             String person_ID_server = "https://io.quartzy.com/users/39647";
             String before_person = "{\"type\":\"person\",\"id\":\"";
             String after_person = "\"}},\"avatar\":";
 
-            Log.v(LOG_TAG, "getPersonID starting");
+            Log.v(LOG_TAG, "getIDs starting");
 
             URL token_server_url = null;
             CookieHandler.setDefault(cookieManager);
@@ -268,19 +252,18 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
             try {
                 token_server_url = new URL(person_ID_server);
             } catch (MalformedURLException e) {
-                Log.v(LOG_TAG, e.toString());
+                e.printStackTrace();
             }
-            StringBuffer data = new StringBuffer();
             HttpURLConnection conn = null;
             try {
                 conn = (HttpURLConnection) token_server_url.openConnection();
             } catch (IOException e) {
-                Log.v(LOG_TAG, e.toString());
+                e.printStackTrace();
             }
             try {
                 conn.setRequestMethod("GET");
             } catch (Exception e) {
-                Log.v(LOG_TAG, e.toString());
+                e.printStackTrace();
             }
             conn.setRequestProperty("Accept", "application/vnd.api+json");
             //conn.setRequestProperty("Accept-Encoding", "gzip, deflate, br");
@@ -297,28 +280,32 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
             try{
                 conn.connect();
             }catch (Exception e){
-                Log.v(LOG_TAG, e.toString());
+                e.printStackTrace();
             }
 
             try {
                 InputStream in = new BufferedInputStream(conn.getInputStream());
-                String encoding = new InputStreamReader(conn.getInputStream()).getEncoding();
-                Log.v(LOG_TAG, "Encoding is:  " + encoding);
                 String string = readStream(in);
-                Log.v(LOG_TAG, "person_id tag string:  "+ string);
-                String stringiest = string.substring(string.indexOf(before_person)+23, string.indexOf(after_person));
-                Log.v(LOG_TAG, "to get userd_id  " +stringiest);
-                person_id = stringiest;
+                person_id = string.substring(string.indexOf(before_person)+23, string.indexOf(after_person));
+                group_id = string.substring(string.indexOf("\"group\",\"id\":\"")+14,string.indexOf("\"}},\"person\"") );
+                Log.v(LOG_TAG, "to get userd_id  " +person_id);
 
-                Log.v(LOG_TAG, "Input Stream oauth:  " + string);
+                SharedPreferences sharedPref = context.getSharedPreferences("myprefs", 0);
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putString("person_id", person_id);
+                editor.putString("group_id", group_id);
+                editor.commit();
+
             } catch (Exception e) {
-                Log.v(LOG_TAG, "2" + e.toString());
+                e.printStackTrace();
+                Intent intent = new Intent(context, Login.class);
+                context.startActivity(intent);
             }
-
-
         }
     }
-    public void orderItem (JSONObject orderJSONObject){
+    private void orderItem (JSONObject orderJSONObject){
+
+        //orders items... as the name would indicate
         String item_name = null;
         String quantity = null;
         String item_id = null;
@@ -327,6 +314,7 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
         String company = null;
         String type = null;
         try{
+            // necessary fields to order items
             item_name = orderJSONObject.getString("item_name");
             quantity = orderJSONObject.getString("quantity");
             item_id = orderJSONObject.getString("item_id");
@@ -335,9 +323,9 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
             company = orderJSONObject.getString("company");
             type = orderJSONObject.getString("type");
         }catch (Exception e){
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
-
+        // not sure if better to make a json object or not
         String requestaddress = "https://io.quartzy.com/groups/46170/order-requests";
         URL requestURL = null;
         String requestp1 = "{\"data\":{\"attributes\":{\"item_name\":\"";
@@ -352,26 +340,21 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
         String request = requestp1 + item_name + requestp2 + quantity +requestp3 + catalog_number +requestp4 + price + requestp5 +item_id + requestp6 +person_id + requestp7+ type + requestp8 + company + requestp9;
 
 
-        // Dillin Lab
-        //request = "{\"data\":{\"attributes\":{\"item_name\":\"Autoclave Bags, Nonhazardous Waste 36 x 45 in\",\"quantity\":\"1\",\"quantity_received\":0,\"catalog_number\":\"14220-044\",\"url\":null,\"price\":\"122.63\",\"details\":\"\",\"source\":\"\",\"shipping\":\"\",\"unit_size\":\"case of 100\",\"bought_from\":null,\"confirmation_number\":null,\"requisition_number\":\"\",\"invoice_number\":null,\"tracking_number\":null,\"notes\":\"\",\"is_urgent\":false,\"vendor_name\":null},\"relationships\":{\"item\":{\"data\":{\"type\":\"item\",\"id\":\"3246454\"}},\"status\":{\"data\":null},\"group\":{\"data\":{\"type\":\"group\",\"id\":\"46170\"}},\"requester\":{\"data\":{\"type\":\"person\",\"id\":\"49232\"}},\"type\":{\"data\":{\"type\":\"type\",\"id\":\"115262\"}},\"grant\":{\"data\":null},\"purchase_order\":{\"data\":null},\"offer\":{\"data\":null},\"company\":{\"data\":{\"type\":\"company\",\"id\":\"2055\"}},\"order_item\":{\"data\":null},\"cart_item\":{\"data\":null},\"created_by\":{\"data\":null},\"updated_by\":{\"data\":null},\"vendor_product\":{\"data\":null}},\"type\":\"order_request\"}}";
-        // Test_Lab
-
         try {
             requestURL = new URL(requestaddress);
         } catch (MalformedURLException e) {
-            Log.v(LOG_TAG,e.toString());
+            e.printStackTrace();
         }
-        StringBuffer data = new StringBuffer();
         HttpURLConnection conn = null;
         try {
             conn = (HttpURLConnection) requestURL.openConnection();
         } catch (IOException e) {
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
         try {
             conn.setRequestMethod("POST");
         } catch (Exception e) {
-            Log.v(LOG_TAG,  e.toString());
+            e.printStackTrace();
         }
 
         conn.setRequestProperty("Accept", "application/vnd.api+json");
@@ -396,12 +379,13 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
             os.close();
 
         } catch (Exception e) {
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
         set_cookie(conn);
 
     }
     public void get_cookie(HttpURLConnection conn) {
+        // TODO: 7/11/2017 fix this method up
         Log.v(LOG_TAG, "get_cookie running");
         SharedPreferences sh_pref_cookie = context.getSharedPreferences("cookies", Context.MODE_PRIVATE);
         String cook_new ;
@@ -419,8 +403,7 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
             editor.commit();
         }
     }
-    public void set_cookie(HttpURLConnection conn) {
-        Log.v(LOG_TAG, "set_cookie running");
+    private void set_cookie(HttpURLConnection conn) {
         Map<String, List<String>> headerFields = conn.getHeaderFields();
         Set<String> keys = headerFields.keySet();
         for (String string : keys){
@@ -429,21 +412,12 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
         }
         List<String> cookiesHeader = headerFields.get(COOKIES_HEADER);
         if (cookiesHeader != null) {
-            Log.v(LOG_TAG, "I think I should be adding cookies");
             for (String cookie : cookiesHeader) {
                 cookieManager.getCookieStore().add(null, HttpCookie.parse(cookie).get(0));
                 Log.v(LOG_TAG, cookie);
             }
         }
 
-        /*
-        SharedPreferences sh_pref_cookie = context.getSharedPreferences("cookies", Context.MODE_PRIVATE);
-        String COOKIES_HEADER = "Cookie";
-        String cook = sh_pref_cookie.getString(COOKIES_HEADER, "no_cookie");
-        if (!cook.equals("no_cookie")) {
-            conn.setRequestProperty(COOKIES_HEADER, cook);
-        }
-        */
     }
     private String readStream(InputStream is) throws IOException {
 
@@ -457,47 +431,50 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
         return sb.toString();
     }
     private void jsonConverter (String string){
+        //Just currently used to get the authorization.
         Log.v(LOG_TAG, "jsonConverter Running to get access_token");
         JSONObject jsonObject = null;
         try {
             jsonObject = new JSONObject(string);
-            Log.v(LOG_TAG, "here's hoping:  " +jsonObject.getString("access_token"));
-            access_token = jsonObject.getString("access_token");
+            String access_token = jsonObject.getString("access_token");
             authorization = "Bearer " + access_token;
         }catch (Exception e){
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
     }
-    public String searchQuartzy(JSONObject jsonObject){
+    private String searchQuartzy(JSONObject jsonObject){
+        // Searches quartzy's inventory for specified item
         Log.v(LOG_TAG, "Search Quartzy is Running");
         String searchString = null;
+        String page = null;
         try{
             searchString = jsonObject.getString("search_string");
+            page = jsonObject.getString("page");
         }catch (Exception e){
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
         String longString = null;
-        String searchStringp1 = "https://io.quartzy.com/groups/46170/items?limit=10&page=1&query=";
-        String searchStringp2 = "&sort=-created_at";
-        String searchStringFull = searchStringp1 + searchString + searchStringp2;
+        String searchStringp1 = "https://io.quartzy.com/groups/46170/items?limit=10&page=";
+        String searchStringp2 = "&query=";
+        String searchStringp3 = "&sort=-created_at";
+        String searchStringFull = searchStringp1 +page + searchStringp2 + searchString + searchStringp3;
         URL searchURL = null;
 
         try {
             searchURL = new URL(searchStringFull);
         } catch (MalformedURLException e) {
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
-        StringBuffer data = new StringBuffer();
         HttpURLConnection conn = null;
         try {
             conn = (HttpURLConnection) searchURL.openConnection();
         } catch (IOException e) {
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
         try {
             conn.setRequestMethod("GET");
         } catch (Exception e) {
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
 
         conn.setRequestProperty("Accept", "application/vnd.api+json");
@@ -514,32 +491,34 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
         try{
             conn.connect();
         }catch (Exception e){
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
 
         try {
             InputStream in = new BufferedInputStream(conn.getInputStream());
             String encoding = new InputStreamReader(conn.getInputStream()).getEncoding();
             Log.v(LOG_TAG, "Encoding is:  " + encoding);
-            String string = readStream(in);
-            longString = string;
+            longString = readStream(in);
             Log.v(LOG_TAG, "Input:  " + longString);
         } catch (Exception e) {
-            Log.v(LOG_TAG, "2" + e.toString());
+            e.printStackTrace();
         }
-        Log.v(LOG_TAG, "Longstring:  " + longString.toString());
+        Log.v(LOG_TAG, "Longstring:  " + longString);
+
+        quartzySearchString = searchString;
+        quartzySearchPage = page;
         return longString;
 
     }
-
     private String requestsSearch (JSONObject jsonObject){
+        // searches request for specified string.
         Log.d(LOG_TAG, "requestSearchRunning");
         String searchString = null;
         String returnString = null;
         try{
             searchString = jsonObject.getString("search_string");
         }catch (Exception e){
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
         Log.d(LOG_TAG, "searchString:  "+ searchString);
         String requestSearchStringp1 = "https://io.quartzy.com/groups/46170/order-requests?group%5B%5D=46170&limit=1&query=";
@@ -550,19 +529,18 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
         try {
             searchURL = new URL(requestSearchString);
         } catch (MalformedURLException e) {
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
-        StringBuffer data = new StringBuffer();
         HttpURLConnection conn = null;
         try {
             conn = (HttpURLConnection) searchURL.openConnection();
         } catch (IOException e) {
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
         try {
             conn.setRequestMethod("GET");
         } catch (Exception e) {
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
 
         conn.setRequestProperty("Accept", "application/vnd.api+json");
@@ -579,24 +557,22 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
         try{
             conn.connect();
         }catch (Exception e){
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
 
         try {
             InputStream in = new BufferedInputStream(conn.getInputStream());
             String encoding = new InputStreamReader(conn.getInputStream()).getEncoding();
             Log.v(LOG_TAG, "Encoding is:  " + encoding);
-            String string = readStream(in);
-            returnString = string;
+            returnString = readStream(in);
             Log.v(LOG_TAG, "Input:  " + returnString);
         } catch (Exception e) {
-            Log.v(LOG_TAG, "2" + e.toString());
+            e.printStackTrace();
         }
         Log.v(LOG_TAG, "returnString:  " + returnString);
         return returnString;
 
     }
-
     private void signIn(JSONObject jsonObject){
         Log.d(LOG_TAG, "signIn");
         String id = null;
@@ -615,7 +591,7 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
             quantity = jsonObject.getString("quantity");
             quantityreceived = jsonObject.getString("quantityreceived");
         }catch (Exception e){
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
         payloadP3 ="\"}},\"order_request\":{\"data\":{\"type\":\"order_request\",\"id\":\"";
         payloadP4 = "\"}}},\"type\":\"order_request_status_change\"}}";
@@ -634,19 +610,18 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
         try {
             signInURL = new URL("https://io.quartzy.com/order-request-status-changes");
         } catch (MalformedURLException e) {
-            Log.v(LOG_TAG,e.toString());
+            e.printStackTrace();
         }
-        StringBuffer data = new StringBuffer();
         HttpURLConnection conn = null;
         try {
             conn = (HttpURLConnection) signInURL.openConnection();
         } catch (IOException e) {
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
         try {
             conn.setRequestMethod("POST");
         } catch (Exception e) {
-            Log.v(LOG_TAG,  e.toString());
+            e.printStackTrace();
         }
 
         conn.setRequestProperty("Accept", "application/vnd.api+json");
@@ -671,7 +646,7 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
             os.close();
 
         } catch (Exception e) {
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
         set_cookie(conn);
 
@@ -681,17 +656,30 @@ public class QuartzyHandler extends AsyncTask<JSONObject, Integer, String> {
         Log.v(LOG_TAG, "onPostExecute running" );
         Log.v(LOG_TAG, "string:  " + string);
         super.onPostExecute(string);
-        if(inputType == "search") {
+        if(inputType.equals("search")) {
             Intent intent = new Intent(context, SearchResults.class);
             intent.putExtra("jsonString", string);
+            // TODO: 7/16/2017 find a more elegant way of passing search string and page
+            Log.d(LOG_TAG, "quartzySearchPage:  " + quartzySearchPage);
+            intent.putExtra("searchString",quartzySearchString);
+            intent.putExtra("searchPage", quartzySearchPage);
+            context.startActivity(intent);
             context.startActivity(intent);
         }
-        if (inputType == "requestssearch"){
+        if (inputType.equals( "requestssearch")){
 
             Intent intent = new Intent(context, SignIn2.class);
             intent.putExtra("jsonString", string);
-            context.startActivity(intent);
+
         }
 
+    }
+    private void checkIDs(){
+        SharedPreferences sharedPref =  context.getSharedPreferences("myprefs", 0);
+        person_id = sharedPref.getString("person_id", "");
+        group_id = sharedPref.getString("group_id", "");
+        if(person_id.equals("") || group_id.equals("")) {
+            getIDs();
+        }
     }
 }

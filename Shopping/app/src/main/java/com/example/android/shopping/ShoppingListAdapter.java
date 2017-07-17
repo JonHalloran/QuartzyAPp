@@ -14,15 +14,15 @@ import android.widget.Toast;
  * Created by Jonathan on 6/28/2017.
  */
 
-public class ShoppingListAdapter extends BaseAdapter {
+class ShoppingListAdapter extends BaseAdapter {
+    //Handles the shopping list used by Dillin Lab.  From the view attached to this should be able to increase number of items needed and then
 
     private String[] itemList;
     private int[] orderAmount;
     Context context;
 
     public int getCount(){
-        int countlength = itemList.length;
-        return countlength;
+        return itemList.length;
     }
     public View getView(final int i, View view, ViewGroup viewGroup){
         final DatabaseHelper databaseHelper = new DatabaseHelper(context);
@@ -56,7 +56,7 @@ public class ShoppingListAdapter extends BaseAdapter {
                     tv_orderCount.setText(Integer.toString(orderAmount[i]));
                     databaseHelper.setOrderAmount(itemList[i], orderAmount [i]);
                 }else{
-                    Toast.makeText(context, ".... You cant order fewer than 0 of something", Toast.LENGTH_SHORT);
+                    Toast.makeText(context, ".... You cant order fewer than 0 of something", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -65,23 +65,20 @@ public class ShoppingListAdapter extends BaseAdapter {
         return view;
     }
     public long getItemId(int i){
-        // TODO: 6/28/2017
-        long l = (long) i;
-        return l;
+        return (long) i;
     }
     public String getItem(int i){
-        // TODO: 6/28/2017
         return itemList[i];
     }
-    public ShoppingListAdapter(String[] itemList , Context context){
+    ShoppingListAdapter(String[] itemList , Context context){
         this.context = context;
         this.itemList = itemList;
         orderAmount = new int[itemList.length];
     }
-    private String[] getItemList(){
+    String[] getItemList(){
         return itemList;
     }
-    private int[] getOrderAmount(){
+    int[] getOrderAmount(){
         return orderAmount;
     }
 }

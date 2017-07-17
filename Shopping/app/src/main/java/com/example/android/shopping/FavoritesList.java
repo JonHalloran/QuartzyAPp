@@ -14,7 +14,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-public class FavoritesList extends AppCompatActivity {
+class FavoritesList extends AppCompatActivity {
     String LOG_TAG = "ShoppingList";
 
     ArrayList<String> selectedItems = new ArrayList<>(); // to be used to populate ordering list
@@ -26,6 +26,8 @@ public class FavoritesList extends AppCompatActivity {
     //// TODO: 6/17/2017  fix this
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // TODO: 7/11/2017 figure out what I'm doing here
         DBhelper2 dBhelper2 = DBhelper2.getInstance(context);
         SQLiteDatabase sqLiteDatabase = dBhelper2.getReadableDatabase();
 
@@ -80,6 +82,5 @@ public class FavoritesList extends AppCompatActivity {
                 selItems+="/"+databaseHelper.getURLFromItemname(item);
         }
         Toast.makeText(this, selItems, Toast.LENGTH_LONG).show();
-        new OrderItems().execute("turtle");
     }
 }

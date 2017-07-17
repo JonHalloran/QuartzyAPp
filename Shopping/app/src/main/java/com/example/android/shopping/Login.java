@@ -12,13 +12,16 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
 /**
  * Created by Jonathan on 7/1/2017.
  */
-// TODO: 7/9/2017 Quartzy call to get person id (group id too?) so that get personID isn't called every QuartzyHandler 
-public class Login extends AppCompatActivity {
+class Login extends AppCompatActivity {
     String LOG_TAG = "Login";
     Context context = this;
+    String login;
+    String password;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         //view stuff
@@ -31,10 +34,10 @@ public class Login extends AppCompatActivity {
             public void onClick(View v) {
                 // getting pw and login
                 EditText et_login = (EditText) findViewById(R.id.et_login);
-                String login = et_login.getText().toString();
+                login = et_login.getText().toString();
 
                 EditText et_password = (EditText) findViewById(R.id.et_password);
-                String password = et_password.getText().toString();
+                password = et_password.getText().toString();
                 //making sure that valid strings are input and going back to main
                 if(!login.matches("") && !password.matches("")){
                     SharedPreferences sharedPref = getSharedPreferences("myprefs", 0);
@@ -42,8 +45,7 @@ public class Login extends AppCompatActivity {
                     editor.putString("Login", login);
                     editor.putString("Password", password);
                     editor.commit();
-
-                    // TODO: 7/1/2017 add Login check
+                    checkLogin();
 
                     Intent intent = new Intent(context, MainActivity.class);
                     startActivity(intent);
@@ -54,5 +56,14 @@ public class Login extends AppCompatActivity {
             }
         });
 
+    }
+    void checkLogin(){
+        JSONObject loginObject = new JSONObject();
+        try{
+            loginObject.put("request_type", "login");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        new QuartzyHandler(context).execute(loginObject);
     }
 }

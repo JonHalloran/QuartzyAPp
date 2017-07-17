@@ -15,7 +15,8 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class ShoppingList extends AppCompatActivity {
+class ShoppingList extends AppCompatActivity {
+        //Handles the shopping list used by Dillin Lab.  From the view attached to this should be able to increase number of items needed and then
     String LOG_TAG = "ShoppingList";
 
     ArrayList<String> selectedItems = new ArrayList<>(); // to be used to populate ordering list
@@ -24,10 +25,10 @@ public class ShoppingList extends AppCompatActivity {
 
     @Override
 
-    //// TODO: 6/17/2017  fix this
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         DatabaseHelper mDBHelper = new DatabaseHelper(this);
+        // TODO: 7/11/2017 figure out if this is dong anything
         SQLiteDatabase sqLiteDatabase = mDBHelper.getWritableDatabase();
         try {
             mDBHelper.updateDataBase();
@@ -37,8 +38,8 @@ public class ShoppingList extends AppCompatActivity {
 
         try {
            SQLiteDatabase mDb = mDBHelper.getWritableDatabase();
-        } catch (SQLException mSQLException) {
-            throw mSQLException;
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         try {
             shopping_items = mDBHelper.getFirstColumn();
@@ -102,6 +103,5 @@ public class ShoppingList extends AppCompatActivity {
                 selItems+="/"+databaseHelper.getURLFromItemname(item);
         }
         Toast.makeText(this, selItems, Toast.LENGTH_LONG).show();
-        new OrderItems().execute("turtle");
     }
 }

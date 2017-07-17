@@ -1,5 +1,4 @@
 <resources>
     <string name="app_name">Shopping</string>
-    <string name="select_items_needed">Select Items Needed</string>
     <string name="order_selected_items">Order Selected Items</string>
 </resources>

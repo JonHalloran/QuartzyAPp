@@ -17,7 +17,7 @@ import java.util.List;
  * Created by Jonathan on 7/4/2017.
  */
 
-public class SearchResultsAdapter extends BaseAdapter {
+class SearchResultsAdapter extends BaseAdapter {
 
     private  static  final String LOG_TAG = "SearchResultsAdapter";
     private List<String> item_name;
@@ -74,7 +74,7 @@ public class SearchResultsAdapter extends BaseAdapter {
                             orderobject.put ("type", type.get(position));
 
                         }catch (Exception e){
-                            Log.v(LOG_TAG, e.toString());
+                            e.printStackTrace();
                         }
 
                 new QuartzyHandler(context).execute(orderobject);
@@ -84,7 +84,7 @@ public class SearchResultsAdapter extends BaseAdapter {
         return view;
     }
 
-    private SearchResultsAdapter(List<String> item_name, List<String> item_id, List<String> catalog_number, List<String> price, List<String> company, List<String> type, Context context) {
+    SearchResultsAdapter(List<String> item_name, List<String> item_id, List<String> catalog_number, List<String> price, List<String> company, List<String> type, Context context) {
         this.item_name = item_name;
         Log.v(LOG_TAG, "lets see waht they got" + item_name.toString());
         this.item_id = item_id;

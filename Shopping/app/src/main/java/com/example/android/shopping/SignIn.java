@@ -2,16 +2,13 @@ package com.example.android.shopping;
 
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
-import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
-import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
@@ -43,7 +40,6 @@ import android.widget.Toast;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -51,7 +47,13 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-public class SignIn extends AppCompatActivity {
+
+// TODO: 7/11/2017 Fix camera/
+class SignIn extends AppCompatActivity {
+
+    //broadly this class shows a camera preview, allows you to take a picture, crops it and then sends
+    // the resulting bitmap over to TessHandler to get string out.  From there it starts up SignIn2 to
+    // allow item to be signed in.  Camera really needs to better set up.
     private static final String LOG_TAG = "SignIn";
     private Button bt_signInTakePicture;
     private TextureView tx_signInTexture;
@@ -127,7 +129,6 @@ public class SignIn extends AppCompatActivity {
         public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
             super.onCaptureCompleted(session, request, result);
             Toast.makeText(SignIn.this, "Saved:" + file, Toast.LENGTH_SHORT).show();
-            //createCameraPreview();
         }
     };
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
@@ -160,7 +161,7 @@ public class SignIn extends AppCompatActivity {
             }
             cameraManager.openCamera(cameraId, stateCallback, null);
         }catch (Exception e){
-            Log.d(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
 
     }
@@ -193,7 +194,7 @@ public class SignIn extends AppCompatActivity {
             }, handler);
         }
         catch (Exception e){
-            Log.d(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
     }
     protected void updatePreview(){
@@ -203,7 +204,7 @@ public class SignIn extends AppCompatActivity {
             Log.d(LOG_TAG, "camerCaptureSession null?  " + Boolean.toString(cameraCaptureSession == null));
             cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, handler);
         }catch (Exception e){
-            Log.d(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
     }
     protected void takePicture(){
@@ -215,14 +216,12 @@ public class SignIn extends AppCompatActivity {
             int width = sizes[0].getWidth();
             int height = sizes[0].getHeight();
             focus = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
-            float hundred = new Float(100);
+            float hundred = Float.valueOf(100);
             Log.d(LOG_TAG, "minimum focus distance:  "  + Float.toString(focus));
             ImageReader imageReader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
             List<Surface> surfaces = new ArrayList<Surface>(2);
             surfaces.add(imageReader.getSurface());
-            //surfaces.add(new Surface(tx_signInTexture.getSurfaceTexture()));
             Log.d(LOG_TAG, "Surface 0 is valid?  " + Boolean.toString(surfaces.get(0).isValid()));
-            //Log.d(LOG_TAG, "Surface 1 is valid?  " + Boolean.toString(surfaces.get(1).isValid()));
             Log.d(LOG_TAG, "available capture request keys:  " + cameraCharacteristics.getAvailableCaptureRequestKeys().toString());
             Log.d(LOG_TAG, "width, height" + Integer.toString(width) + Integer.toString(height));
             final CaptureRequest.Builder captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
@@ -252,7 +251,7 @@ public class SignIn extends AppCompatActivity {
                         quartzySearch();
                         Log.d(LOG_TAG, "post tessHandler");
                     }catch (Exception e){
-                        Log.d(LOG_TAG, e.toString());
+                        e.printStackTrace();
                     }finally {
                         if (image != null){
                             image.close();
@@ -278,7 +277,7 @@ public class SignIn extends AppCompatActivity {
                         session.capture(captureBuilder.build(), captureCallback, handler);
                         Log.d(LOG_TAG, "after ccs in onConfigured");
                     }catch (Exception e){
-                        Log.d(LOG_TAG, e.toString());
+                        e.printStackTrace();
                     }
                 }
 
@@ -288,8 +287,6 @@ public class SignIn extends AppCompatActivity {
                 }
             }, handler);
         }catch (Exception e){
-            Log.d(LOG_TAG, e.toString());
-            Log.d(LOG_TAG, "this catch right HERE");
             e.printStackTrace();
         }
 
@@ -313,12 +310,10 @@ public class SignIn extends AppCompatActivity {
     }
     private void save(byte[] bytes) throws IOException{
         Log.d(LOG_TAG, "save running");
-        OutputStream outputStream = null;
+        OutputStream outputStream;
         outputStream = new FileOutputStream(file);
         outputStream.write(bytes);
-        if (outputStream == null){
-            outputStream.close();
-        }
+        outputStream.close();
     }
     private  void getCroppedImage(){
         Log.d(LOG_TAG, "getCroppedImage");
@@ -351,9 +346,9 @@ public class SignIn extends AppCompatActivity {
 
         Log.d(LOG_TAG, "quartzySearch");
         String searchString = null;
-        String oCRResults = null;
         TessHandler tessHandler = new TessHandler(context);
-        oCRResults = tessHandler.analyzeImage();
+        Log.v(LOG_TAG, "qsearch after thandler");
+        String oCRResults = tessHandler.analyzeImage();
         Log.d(LOG_TAG, "OCR Results" + oCRResults);
         if (oCRResults == null){
             Toast.makeText(context, "Didn't work please try again", Toast.LENGTH_LONG).show();
@@ -369,7 +364,7 @@ public class SignIn extends AppCompatActivity {
             searchObject.put("request_type", "requestssearch");
             searchObject.put("search_string", searchString);
         }catch (Exception e){
-            Log.v(LOG_TAG, e.toString());
+            e.printStackTrace();
         }
         new QuartzyHandler(context).execute(searchObject);
     }
